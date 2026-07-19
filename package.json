@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "API REST para gestion integral de servicio tecnico de celulares",
   "main": "dist/server.js",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
