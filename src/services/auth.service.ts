@@ -82,11 +82,16 @@ export class AuthService {
       .eq('email', email)
       .single();
 
-    if (error || !usuario) throw new UnauthorizedError('Credenciales invalidas');
+    if (error || !usuario) {
+      throw new UnauthorizedError('Credenciales invalidas');
+    }
+    
     if (usuario.estado !== 'activo') throw new UnauthorizedError('Usuario inactivo');
 
     const passwordValido = await bcrypt.compare(password, usuario.password_hash);
-    if (!passwordValido) throw new UnauthorizedError('Credenciales invalidas');
+    if (!passwordValido) {
+      throw new UnauthorizedError('Credenciales invalidas');
+    }
 
     const permisos = await this.getPermisosUsuario(usuario.rol_id);
     const rolNombre = (usuario.roles as any)?.nombre || 'cliente';

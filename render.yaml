@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: backend-servicio-tecnico
+    name: backend-tecnicel
     env: node
     buildCommand: npm install && npm run build
     startCommand: npm start
@@ -12,9 +12,11 @@ services:
       - key: SUPABASE_URL
         value: https://isszxxlrbbkjagkdssih.supabase.co
       - key: SUPABASE_ANON_KEY
-        value: sb_publishable_gZr40tcu-9MaT2rp92w7eQ_PcrkjQHL
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlzc3p4eGxyYmJramFna2Rzc2loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0MjEwNDQsImV4cCI6MjA5OTk5NzA0NH0.6qZhTDT8QWyRpmf-f1nQz-VY-ETZybt0JgdmFEJd4Rw
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        value: estado-dispositivos
       - key: JWT_SECRET
         sync: false
       - key: JWT_EXPIRES_IN
