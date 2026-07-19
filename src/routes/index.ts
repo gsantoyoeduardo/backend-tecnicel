@@ -22,6 +22,9 @@ import { pagosRoutes } from './pagos.routes';
 import { notificacionesRoutes } from './notificaciones.routes';
 import { calificacionesRoutes } from './calificaciones.routes';
 import { dashboardRoutes } from './dashboard.routes';
+import { estadoDispositivoRoutes } from './estado-dispositivo.routes';
+import { uploadRoutes } from './upload.routes';
+import { ticketRoutes } from './ticket.routes';
 
 const router = Router();
 
@@ -61,5 +64,8 @@ router.use('/solicitudes', calificacionesRoutes);
 router.use('/reclamos', calificacionesRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/reportes', dashboardRoutes);
+router.use('/solicitudes', estadoDispositivoRoutes);
+router.use('/upload', uploadRoutes);
+router.use('/solicitudes', ticketRoutes);
 
 export { router as routes };

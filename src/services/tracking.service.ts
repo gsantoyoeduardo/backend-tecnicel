@@ -49,7 +49,15 @@ export class TrackingService {
   async getByCodigo(codigo: string) {
     const { data: solicitud, error: solicitudError } = await supabase
       .from('solicitudes')
-      .select('id, estado, codigo_seguimiento, created_at')
+      .select(`
+        id, 
+        estado, 
+        codigo_seguimiento, 
+        created_at,
+        descripcion_problema,
+        dispositivos(*, modelos(*, marcas(*))),
+        clientes(*, usuarios(nombre, apellido, telefono))
+      `)
       .eq('codigo_seguimiento', codigo)
       .single();
 
@@ -63,13 +71,33 @@ export class TrackingService {
 
     if (trackingError) throw new AppError('Error al obtener tracking', 500);
 
+    const { data: estados } = await supabase
+      .from('estado_dispositivo')
+      .select('*')
+      .eq('solicitud_id', solicitud.id)
+      .order('created_at', { ascending: true });
+
+    const { data: observaciones } = await supabase
+      .from('observaciones_solicitudes')
+      .select('*, usuarios(nombre, apellido)')
+      .eq('solicitud_id', solicitud.id)
+      .order('created_at', { ascending: true });
+
     return {
       solicitud: {
         codigo: solicitud.codigo_seguimiento,
         estado: solicitud.estado,
         fecha_creacion: solicitud.created_at,
+        problema: solicitud.descripcion_problema,
+        dispositivo: solicitud.dispositivos,
+        cliente: {
+          nombre: (solicitud.clientes as any)?.[0]?.usuarios?.nombre,
+          apellido: (solicitud.clientes as any)?.[0]?.usuarios?.apellido,
+        },
       },
       eventos: tracking,
+      estados_dispositivo: estados || [],
+      observaciones: observaciones || [],
     };
   }
 
