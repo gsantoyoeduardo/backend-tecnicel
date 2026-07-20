@@ -7,6 +7,15 @@ export const createClienteSchema = z.object({
   fecha_nacimiento: z.string().optional(),
 });
 
+export const registroRapidoSchema = z.object({
+  email: z.string().email('Email invalido'),
+  nombre: z.string().min(2, 'Minimo 2 caracteres'),
+  apellido: z.string().min(2, 'Minimo 2 caracteres'),
+  telefono: z.string().optional(),
+  tipo_documento: z.string().optional(),
+  numero_documento: z.string().optional(),
+});
+
 export const updateClienteSchema = z.object({
   tipo_documento: z.string().optional(),
   numero_documento: z.string().optional(),

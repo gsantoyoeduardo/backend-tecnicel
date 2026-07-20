@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase';
 import { AppError, NotFoundError } from '../utils/errors';
+import bcrypt from 'bcryptjs';
 
 export class ClientesService {
   async listar() {
@@ -9,7 +10,19 @@ export class ClientesService {
       .order('created_at', { ascending: false });
 
     if (error) throw new AppError('Error al listar clientes', 500);
-    return data;
+    
+    return data.map((c) => ({
+      id: c.id,
+      nombre: c.usuarios.nombre,
+      apellido: c.usuarios.apellido,
+      email: c.usuarios.email,
+      telefono: c.usuarios.telefono,
+      estado: c.usuarios.estado,
+      tipo_documento: c.tipo_documento,
+      numero_documento: c.numero_documento,
+      created_at: c.created_at,
+      updated_at: c.updated_at,
+    }));
   }
 
   async obtenerPorId(id: string) {
@@ -20,7 +33,19 @@ export class ClientesService {
       .single();
 
     if (error || !data) throw new NotFoundError('Cliente no encontrado');
-    return data;
+    
+    return {
+      id: data.id,
+      nombre: data.usuarios.nombre,
+      apellido: data.usuarios.apellido,
+      email: data.usuarios.email,
+      telefono: data.usuarios.telefono,
+      estado: data.usuarios.estado,
+      tipo_documento: data.tipo_documento,
+      numero_documento: data.numero_documento,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+    };
   }
 
   async crear(data: {
@@ -50,6 +75,83 @@ export class ClientesService {
 
     if (error) throw new AppError(`Error al crear cliente: ${error.message}`, 500);
     return cliente;
+  }
+
+  async registroRapido(data: {
+    nombre: string;
+    apellido: string;
+    email: string;
+    telefono?: string;
+    tipo_documento?: string;
+    numero_documento?: string;
+  }) {
+    const { data: existing } = await supabase
+      .from('usuarios')
+      .select('id')
+      .eq('email', data.email)
+      .maybeSingle();
+
+    if (existing) throw new AppError('El email ya esta registrado', 409);
+
+    const passwordTemporal = this.generarPasswordTemporal();
+    const passwordHash = await bcrypt.hash(passwordTemporal, 10);
+
+    const { data: rolCliente } = await supabase
+      .from('roles')
+      .select('id')
+      .eq('nombre', 'cliente')
+      .single();
+
+    if (!rolCliente) throw new AppError('Rol cliente no encontrado', 500);
+
+    const { data: usuario, error: userError } = await supabase
+      .from('usuarios')
+      .insert({
+        email: data.email,
+        password_hash: passwordHash,
+        nombre: data.nombre,
+        apellido: data.apellido,
+        telefono: data.telefono || null,
+        rol_id: rolCliente.id,
+        estado: 'activo',
+      })
+      .select('id, email, nombre, apellido, telefono, estado')
+      .single();
+
+    if (userError) throw new AppError(`Error al crear usuario: ${userError.message}`, 500);
+
+    const { data: cliente, error: clienteError } = await supabase
+      .from('clientes')
+      .insert({
+        usuario_id: usuario.id,
+        tipo_documento: data.tipo_documento || null,
+        numero_documento: data.numero_documento || null,
+      })
+      .select()
+      .single();
+
+    if (clienteError) throw new AppError(`Error al crear cliente: ${clienteError.message}`, 500);
+
+    return {
+      id: cliente.id,
+      nombre: usuario.nombre,
+      apellido: usuario.apellido,
+      email: usuario.email,
+      telefono: usuario.telefono,
+      estado: usuario.estado,
+      tipo_documento: cliente.tipo_documento,
+      numero_documento: cliente.numero_documento,
+      created_at: cliente.created_at,
+    };
+  }
+
+  private generarPasswordTemporal(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 10; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
   }
 
   async actualizar(id: string, data: {

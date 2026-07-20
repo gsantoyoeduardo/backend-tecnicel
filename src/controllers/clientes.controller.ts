@@ -30,6 +30,15 @@ export class ClientesController {
     }
   }
 
+  async registroRapido(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await clientesService.registroRapido(req.body);
+      successResponse(res, data, 'Cliente registrado exitosamente', 201);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async actualizar(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await clientesService.actualizar(req.params.id, req.body);
