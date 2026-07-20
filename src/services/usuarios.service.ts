@@ -58,6 +58,12 @@ export class UsuariosService {
 
     if (error) throw new AppError(`Error al crear usuario: ${error.message}`, 500);
 
+    // Crear perfil de técnico automáticamente si el rol es "tecnico"
+    const nombreRol = await this.obtenerNombreRol(data.rol_id);
+    if (nombreRol === 'tecnico') {
+      await this.crearPerfilTecnico(usuario.id);
+    }
+
     return usuario;
   }
 
@@ -76,6 +82,22 @@ export class UsuariosService {
 
     if (error) throw new AppError(`Error al editar: ${error.message}`, 500);
     if (!usuario) throw new NotFoundError('Usuario no encontrado');
+
+    // Si se cambió el rol a "tecnico", crear perfil si no existe
+    if (data.rol_id) {
+      const nombreRol = await this.obtenerNombreRol(data.rol_id);
+      if (nombreRol === 'tecnico') {
+        const { data: perfilExistente } = await supabase
+          .from('tecnicos')
+          .select('id')
+          .eq('usuario_id', id)
+          .maybeSingle();
+        
+        if (!perfilExistente) {
+          await this.crearPerfilTecnico(id);
+        }
+      }
+    }
 
     return usuario;
   }
@@ -103,6 +125,31 @@ export class UsuariosService {
     if (error) throw new AppError(`Error al eliminar: ${error.message}`, 500);
 
     return { message: 'Usuario eliminado' };
+  }
+
+  private async obtenerNombreRol(rolId: string): Promise<string | null> {
+    const { data: rol } = await supabase
+      .from('roles')
+      .select('nombre')
+      .eq('id', rolId)
+      .single();
+    
+    return rol?.nombre || null;
+  }
+
+  private async crearPerfilTecnico(usuarioId: string) {
+    const { error } = await supabase
+      .from('tecnicos')
+      .insert({
+        usuario_id: usuarioId,
+        especialidad: null,
+        experiencia_anios: 0,
+        estado: 'activo',
+      });
+    
+    if (error) {
+      console.error('Error al crear perfil de técnico:', error);
+    }
   }
 }
 
