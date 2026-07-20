@@ -4,14 +4,13 @@
 -- ============================================
 
 -- 1. Crear usuarios de prueba
--- Contraseñas: todas son "123456" (hash bcrypt)
--- admin123, recepcion123, tecnico123
+-- Contraseñas: admin123, recepcion123, tecnico123 (hashes bcrypt reales)
 
--- Admin
+-- Admin (contraseña: admin123)
 INSERT INTO usuarios (email, password_hash, nombre, apellido, telefono, rol_id, estado)
 VALUES (
   'admin@tecnicel.com',
-  '$2a$10$rQZm8Cv7XH5J vXw7Jq8eOeYhGjKLkF9XhJ8vXhJ8vXhJ8vXhJ8vX',
+  '$2a$10$mxyOn5jVx5jGb7h8Si0Dp.QZBiZ6MeLSidvW6A2GPiZq0Ny44asrG',
   'Admin',
   'TecniCel',
   '999111222',
@@ -19,11 +18,11 @@ VALUES (
   'activo'
 ) ON CONFLICT (email) DO NOTHING;
 
--- Recepcionista
+-- Recepcionista (contraseña: recepcion123)
 INSERT INTO usuarios (email, password_hash, nombre, apellido, telefono, rol_id, estado)
 VALUES (
   'recepcion@tecnicel.com',
-  '$2a$10$rQZm8Cv7XH5J vXw7Jq8eOeYhGjKLkF9XhJ8vXhJ8vXhJ8vXhJ8vX',
+  '$2a$10$1DxLBBknbsO9Q08PUz8etuNMoh..UsZ6UvHC44QSXrieGaWwYiJsK',
   'Maria',
   'Garcia',
   '999222333',
@@ -31,11 +30,11 @@ VALUES (
   'activo'
 ) ON CONFLICT (email) DO NOTHING;
 
--- Tecnico 1
+-- Tecnico 1 (contraseña: tecnico123)
 INSERT INTO usuarios (email, password_hash, nombre, apellido, telefono, rol_id, estado)
 VALUES (
   'tecnico@tecnicel.com',
-  '$2a$10$rQZm8Cv7XH5J vXw7Jq8eOeYhGjKLkF9XhJ8vXhJ8vXhJ8vXhJ8vX',
+  '$2a$10$1K2NqQMQp4KLQ2GaXgkliuRRNfz6J5gQbTQ6CaVtOKqVTN9r5R9QS',
   'Carlos',
   'Rodriguez',
   '999333444',
@@ -43,28 +42,17 @@ VALUES (
   'activo'
 ) ON CONFLICT (email) DO NOTHING;
 
--- Tecnico 2
+-- Tecnico 2 (contraseña: tecnico123)
 INSERT INTO usuarios (email, password_hash, nombre, apellido, telefono, rol_id, estado)
 VALUES (
   'tecnico2@tecnicel.com',
-  '$2a$10$rQZm8Cv7XH5J vXw7Jq8eOeYhGjKLkF9XhJ8vXhJ8vXhJ8vXhJ8vX',
+  '$2a$10$1K2NqQMQp4KLQ2GaXgkliuRRNfz6J5gQbTQ6CaVtOKqVTN9r5R9QS',
   'Jose',
   'Martinez',
   '999444555',
   (SELECT id FROM roles WHERE nombre = 'tecnico'),
   'activo'
 ) ON CONFLICT (email) DO NOTHING;
-
--- ============================================
--- NOTA IMPORTANTE:
--- Las contraseñas de arriba son placeholders.
--- Necesitas generar los hashes bcrypt reales.
--- Usa este script alternativo con Node.js:
---
--- node -e "const bcrypt = require('bcryptjs'); bcrypt.hash('admin123', 10).then(h => console.log('admin:', h));"
--- node -e "const bcrypt = require('bcryptjs'); bcrypt.hash('recepcion123', 10).then(h => console.log('recepcion:', h));"
--- node -e "const bcrypt = require('bcryptjs'); bcrypt.hash('tecnico123', 10).then(h => console.log('tecnico:', h));"
--- ============================================
 
 -- 2. Crear sucursal
 INSERT INTO sucursales (nombre, direccion, telefono, email, estado)

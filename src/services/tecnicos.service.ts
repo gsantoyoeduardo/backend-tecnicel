@@ -176,12 +176,10 @@ export class TecnicosService {
   }
 
   async misServicios(usuarioId: string) {
-    const tecnicoId = await this.getTecnicoIdFromUsuario(usuarioId);
-
     const { data, error } = await supabase
       .from('solicitudes')
       .select('*, servicios(*), dispositivos(*, modelos(*, marcas(*)))')
-      .eq('tecnico_id', tecnicoId)
+      .eq('tecnico_id', usuarioId)
       .order('created_at', { ascending: false });
 
     if (error) throw new AppError('Error al obtener servicios', 500);
@@ -189,8 +187,6 @@ export class TecnicosService {
   }
 
   async iniciarAtencion(solicitudId: string, usuarioId: string) {
-    const tecnicoId = await this.getTecnicoIdFromUsuario(usuarioId);
-
     const { data: solicitud } = await supabase
       .from('solicitudes')
       .select('id, tecnico_id, estado')
@@ -198,7 +194,9 @@ export class TecnicosService {
       .single();
 
     if (!solicitud) throw new NotFoundError('Solicitud no encontrada');
-    if (solicitud.tecnico_id !== tecnicoId) throw new ForbiddenError('Esta solicitud no esta asignada a este tecnico');
+    if (solicitud.tecnico_id !== usuarioId) throw new ForbiddenError('Esta solicitud no esta asignada a este tecnico');
+
+    const tecnicoId = await this.getTecnicoIdFromUsuario(usuarioId);
 
     const { data: reparacion, error } = await supabase
       .from('reparaciones')
@@ -229,8 +227,6 @@ export class TecnicosService {
   }
 
   async cambiarEstado(solicitudId: string, usuarioId: string, estado: string, comentario?: string) {
-    const tecnicoId = await this.getTecnicoIdFromUsuario(usuarioId);
-
     const { data: solicitud } = await supabase
       .from('solicitudes')
       .select('id, tecnico_id, estado')
@@ -238,7 +234,7 @@ export class TecnicosService {
       .single();
 
     if (!solicitud) throw new NotFoundError('Solicitud no encontrada');
-    if (solicitud.tecnico_id !== tecnicoId) throw new ForbiddenError('Esta solicitud no esta asignada a este tecnico');
+    if (solicitud.tecnico_id !== usuarioId) throw new ForbiddenError('Esta solicitud no esta asignada a este tecnico');
 
     const { data, error } = await supabase
       .from('solicitudes')
@@ -264,8 +260,6 @@ export class TecnicosService {
     usuarioId: string,
     data: { descripcion: string; diagnostico?: string; observaciones?: string },
   ) {
-    const tecnicoId = await this.getTecnicoIdFromUsuario(usuarioId);
-
     const { data: solicitud } = await supabase
       .from('solicitudes')
       .select('id, tecnico_id')
@@ -273,7 +267,9 @@ export class TecnicosService {
       .single();
 
     if (!solicitud) throw new NotFoundError('Solicitud no encontrada');
-    if (solicitud.tecnico_id !== tecnicoId) throw new ForbiddenError('Esta solicitud no esta asignada a este tecnico');
+    if (solicitud.tecnico_id !== usuarioId) throw new ForbiddenError('Esta solicitud no esta asignada a este tecnico');
+
+    const tecnicoId = await this.getTecnicoIdFromUsuario(usuarioId);
 
     const { data: diagnostico, error } = await supabase
       .from('diagnosticos')
@@ -292,6 +288,15 @@ export class TecnicosService {
   }
 
   async subirEvidencias(solicitudId: string, usuarioId: string, urlArchivo: string, tipo?: string) {
+    const { data: solicitud } = await supabase
+      .from('solicitudes')
+      .select('id, tecnico_id')
+      .eq('id', solicitudId)
+      .single();
+
+    if (!solicitud) throw new NotFoundError('Solicitud no encontrada');
+    if (solicitud.tecnico_id !== usuarioId) throw new ForbiddenError('Esta solicitud no esta asignada a este tecnico');
+
     const tecnicoId = await this.getTecnicoIdFromUsuario(usuarioId);
 
     const { data: reparacion } = await supabase
@@ -320,6 +325,15 @@ export class TecnicosService {
   }
 
   async finalizarAtencion(solicitudId: string, usuarioId: string) {
+    const { data: solicitud } = await supabase
+      .from('solicitudes')
+      .select('id, tecnico_id')
+      .eq('id', solicitudId)
+      .single();
+
+    if (!solicitud) throw new NotFoundError('Solicitud no encontrada');
+    if (solicitud.tecnico_id !== usuarioId) throw new ForbiddenError('Esta solicitud no esta asignada a este tecnico');
+
     const tecnicoId = await this.getTecnicoIdFromUsuario(usuarioId);
 
     const { data: reparacion } = await supabase
@@ -362,8 +376,6 @@ export class TecnicosService {
   }
 
   async misOrdenes(usuarioId: string) {
-    const tecnicoId = await this.getTecnicoIdFromUsuario(usuarioId);
-
     const { data, error } = await supabase
       .from('solicitudes')
       .select(`
@@ -371,7 +383,7 @@ export class TecnicosService {
         orden_dispositivos(*, orden_servicios(*, servicios(*))),
         clientes(*, usuarios(nombre, apellido, telefono, email))
       `)
-      .eq('tecnico_id', tecnicoId)
+      .eq('tecnico_id', usuarioId)
       .order('created_at', { ascending: false });
 
     if (error) throw new AppError('Error al obtener ordenes', 500);
@@ -390,8 +402,6 @@ export class TecnicosService {
     },
     usuarioId: string
   ) {
-    const tecnicoId = await this.getTecnicoIdFromUsuario(usuarioId);
-
     const { data: orden } = await supabase
       .from('solicitudes')
       .select('id, tecnico_id')
@@ -399,7 +409,7 @@ export class TecnicosService {
       .single();
 
     if (!orden) throw new NotFoundError('Orden no encontrada');
-    if (orden.tecnico_id !== tecnicoId) throw new ForbiddenError('No estás asignado a esta orden');
+    if (orden.tecnico_id !== usuarioId) throw new ForbiddenError('No estás asignado a esta orden');
 
     const { data: dispositivo, error } = await supabase
       .from('orden_dispositivos')
