@@ -5,7 +5,7 @@ export class TecnicosService {
   async listar() {
     const { data, error } = await supabase
       .from('tecnicos')
-      .select('*, usuarios!inner(id, email, nombre, apellido, telefono, estado, rol)')
+      .select('*, usuarios!inner(id, email, nombre, apellido, telefono, estado, rol_id, roles(nombre))')
       .order('created_at', { ascending: false });
 
     if (error) throw new AppError('Error al listar tecnicos', 500);
@@ -15,7 +15,7 @@ export class TecnicosService {
   async obtenerPorId(id: string) {
     const { data, error } = await supabase
       .from('tecnicos')
-      .select('*, usuarios!inner(id, email, nombre, apellido, telefono, estado, rol)')
+      .select('*, usuarios!inner(id, email, nombre, apellido, telefono, estado, rol_id, roles(nombre))')
       .eq('id', id)
       .single();
 
