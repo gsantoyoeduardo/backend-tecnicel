@@ -55,6 +55,6 @@ router.delete(
 
 const marcasModelosRouter = Router();
 
-marcasModelosRouter.get('/marcas/:marcaId/modelos', modelosController.listarPorMarca);
+marcasModelosRouter.get('/:marcaId/modelos', modelosController.listarPorMarca);
 
 export { router as modelosRoutes, marcasModelosRouter as marcasModelosRoutes };

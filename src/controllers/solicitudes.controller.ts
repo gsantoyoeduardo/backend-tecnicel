@@ -143,6 +143,38 @@ export class SolicitudesController {
       next(error);
     }
   }
+
+  async crearOrden(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await solicitudesService.crearOrden(req.body);
+      successResponse(res, data, 'Orden de servicio creada exitosamente', 201);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async cambiarEstadoTecnico(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await solicitudesService.cambiarEstadoTecnico(
+        req.params.ordenId,
+        req.body.estado,
+        req.body.comentario,
+        req.user!.id
+      );
+      successResponse(res, data, 'Estado actualizado');
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getHistorialEstados(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await solicitudesService.getHistorialEstados(req.params.id);
+      successResponse(res, data);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const solicitudesController = new SolicitudesController();

@@ -6,7 +6,7 @@ import { roleMiddleware } from '../middlewares/role.middleware';
 const router = Router();
 
 router.use(authMiddleware);
-router.use(roleMiddleware('administrador', 'recepcionista'));
+router.use(roleMiddleware('administrador', 'recepcionista', 'tecnico'));
 
 router.get('/resumen', dashboardController.resumen);
 router.get('/solicitudes-por-estado', dashboardController.solicitudesPorEstado);

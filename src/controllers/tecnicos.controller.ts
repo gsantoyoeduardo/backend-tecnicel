@@ -142,6 +142,29 @@ export class TecnicosController {
       next(error);
     }
   }
+
+  async misOrdenes(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await tecnicosService.misOrdenes(req.user!.id);
+      successResponse(res, data);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async registrarEstadoInicial(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await tecnicosService.registrarEstadoInicial(
+        req.params.ordenId,
+        req.params.dispositivoId,
+        req.body,
+        req.user!.id
+      );
+      successResponse(res, data, 'Estado inicial registrado', 201);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const tecnicosController = new TecnicosController();

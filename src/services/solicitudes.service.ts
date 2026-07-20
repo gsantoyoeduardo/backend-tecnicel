@@ -335,6 +335,154 @@ export class SolicitudesService {
     if (error) throw new AppError('Error al obtener historial', 500);
     return data;
   }
+
+  async crearOrden(data: {
+    cliente_id: string;
+    tecnico_id: string;
+    dispositivos: Array<{
+      marca: string;
+      modelo: string;
+      imei?: string;
+      color?: string;
+      servicios: Array<{
+        servicio_id: string;
+        cantidad: number;
+        precio_unitario: number;
+      }>;
+    }>;
+    modalidad: string;
+    sucursal_id?: string;
+    descripcion_problema?: string;
+  }) {
+    const codigoSeguimiento = generateTrackingCode();
+
+    const { data: solicitud, error: errorSolicitud } = await supabase
+      .from('solicitudes')
+      .insert({
+        cliente_id: data.cliente_id,
+        tecnico_id: data.tecnico_id,
+        descripcion_problema: data.descripcion_problema || null,
+        modalidad: data.modalidad,
+        sucursal_id: data.sucursal_id || null,
+        estado: 'solicitud_registrada',
+        codigo_seguimiento: codigoSeguimiento,
+      })
+      .select()
+      .single();
+
+    if (errorSolicitud) throw new AppError(`Error al crear orden: ${errorSolicitud.message}`, 500);
+
+    for (const dispositivo of data.dispositivos) {
+      const { data: dispositivoOrden, error: errorDispositivo } = await supabase
+        .from('orden_dispositivos')
+        .insert({
+          orden_id: solicitud.id,
+          marca: dispositivo.marca,
+          modelo: dispositivo.modelo,
+          imei: dispositivo.imei || null,
+          color: dispositivo.color || null,
+        })
+        .select()
+        .single();
+
+      if (errorDispositivo) throw new AppError(`Error al crear dispositivo: ${errorDispositivo.message}`, 500);
+
+      for (const servicio of dispositivo.servicios) {
+        const subtotal = servicio.cantidad * servicio.precio_unitario;
+
+        const { error: errorServicio } = await supabase
+          .from('orden_servicios')
+          .insert({
+            orden_id: solicitud.id,
+            dispositivo_orden_id: dispositivoOrden.id,
+            servicio_id: servicio.servicio_id,
+            cantidad: servicio.cantidad,
+            precio_unitario: servicio.precio_unitario,
+            subtotal: subtotal,
+          });
+
+        if (errorServicio) throw new AppError(`Error al crear servicio: ${errorServicio.message}`, 500);
+      }
+    }
+
+    await supabase.from('solicitudes_tracking').insert({
+      solicitud_id: solicitud.id,
+      estado: 'solicitud_registrada',
+      comentario: 'Orden de servicio registrada',
+    });
+
+    const { data: ordenCompleta } = await supabase
+      .from('solicitudes')
+      .select(`
+        *,
+        orden_dispositivos(*, orden_servicios(*, servicios(*))),
+        clientes(*, usuarios(nombre, apellido, telefono, email)),
+        usuarios:tecnico_id(nombre, apellido, email)
+      `)
+      .eq('id', solicitud.id)
+      .single();
+
+    return ordenCompleta;
+  }
+
+  async cambiarEstadoTecnico(ordenId: string, estado: string, comentario: string | undefined, tecnicoId: string) {
+    const { data: orden } = await supabase
+      .from('solicitudes')
+      .select('id, tecnico_id')
+      .eq('id', ordenId)
+      .single();
+
+    if (!orden) throw new NotFoundError('Orden no encontrada');
+    if (orden.tecnico_id !== tecnicoId) throw new ForbiddenError('No estás asignado a esta orden');
+
+    const { data, error } = await supabase
+      .from('solicitudes')
+      .update({ estado, updated_at: new Date().toISOString() })
+      .eq('id', ordenId)
+      .select()
+      .single();
+
+    if (error) throw new AppError(`Error al cambiar estado: ${error.message}`, 500);
+
+    await supabase.from('solicitudes_tracking').insert({
+      solicitud_id: ordenId,
+      estado,
+      comentario: comentario || null,
+      usuario_id: tecnicoId,
+    });
+
+    return data;
+  }
+
+  async getHistorialEstados(id: string) {
+    const { data: orden } = await supabase
+      .from('solicitudes')
+      .select('id')
+      .eq('id', id)
+      .single();
+
+    if (!orden) throw new NotFoundError('Orden no encontrada');
+
+    const { data: tracking, error: errorTracking } = await supabase
+      .from('solicitudes_tracking')
+      .select('*, usuarios(nombre, apellido)')
+      .eq('solicitud_id', id)
+      .order('created_at', { ascending: true });
+
+    if (errorTracking) throw new AppError('Error al obtener historial', 500);
+
+    const { data: dispositivos, error: errorDispositivos } = await supabase
+      .from('orden_dispositivos')
+      .select('*')
+      .eq('orden_id', id);
+
+    if (errorDispositivos) throw new AppError('Error al obtener dispositivos', 500);
+
+    return {
+      tracking,
+      dispositivos,
+    };
+  }
 }
 
 export const solicitudesService = new SolicitudesService();

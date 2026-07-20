@@ -13,8 +13,10 @@ router.use(authMiddleware);
 router.use(roleMiddleware('administrador', 'recepcionista'));
 
 router.get('/', solicitudesController.listarTodas);
+router.post('/orden', solicitudesController.crearOrden);
 router.get('/:id', solicitudesController.obtenerPorId);
 router.get('/:id/historial', solicitudesController.historial);
+router.get('/:id/historial-estados', solicitudesController.getHistorialEstados);
 
 router.patch('/:id/confirmar', solicitudesController.confirmar);
 

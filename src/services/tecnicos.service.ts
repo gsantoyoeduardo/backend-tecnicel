@@ -360,6 +360,67 @@ export class TecnicosService {
 
     return data;
   }
+
+  async misOrdenes(usuarioId: string) {
+    const tecnicoId = await this.getTecnicoIdFromUsuario(usuarioId);
+
+    const { data, error } = await supabase
+      .from('solicitudes')
+      .select(`
+        *,
+        orden_dispositivos(*, orden_servicios(*, servicios(*))),
+        clientes(*, usuarios(nombre, apellido, telefono, email))
+      `)
+      .eq('tecnico_id', tecnicoId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw new AppError('Error al obtener ordenes', 500);
+    return data;
+  }
+
+  async registrarEstadoInicial(
+    ordenId: string,
+    dispositivoId: string,
+    data: {
+      estado_general?: string;
+      bateria?: number;
+      accesorios?: string[];
+      fotos?: string[];
+      notas?: string;
+    },
+    usuarioId: string
+  ) {
+    const tecnicoId = await this.getTecnicoIdFromUsuario(usuarioId);
+
+    const { data: orden } = await supabase
+      .from('solicitudes')
+      .select('id, tecnico_id')
+      .eq('id', ordenId)
+      .single();
+
+    if (!orden) throw new NotFoundError('Orden no encontrada');
+    if (orden.tecnico_id !== tecnicoId) throw new ForbiddenError('No estás asignado a esta orden');
+
+    const { data: dispositivo, error } = await supabase
+      .from('orden_dispositivos')
+      .update({
+        estado_inicial: data.estado_general || null,
+        bateria: data.bateria || null,
+        accesorios: data.accesorios || [],
+        fotos: data.fotos || [],
+        notas: data.notas || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', dispositivoId)
+      .eq('orden_id', ordenId)
+      .select()
+      .single();
+
+    if (error) throw new AppError(`Error al registrar estado inicial: ${error.message}`, 500);
+    if (!dispositivo) throw new NotFoundError('Dispositivo no encontrado');
+
+    return dispositivo;
+  }
 }
 
 export const tecnicosService = new TecnicosService();
