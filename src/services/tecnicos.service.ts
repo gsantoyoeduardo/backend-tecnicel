@@ -196,13 +196,11 @@ export class TecnicosService {
     if (!solicitud) throw new NotFoundError('Solicitud no encontrada');
     if (solicitud.tecnico_id !== usuarioId) throw new ForbiddenError('Esta solicitud no esta asignada a este tecnico');
 
-    const tecnicoId = await this.getTecnicoIdFromUsuario(usuarioId);
-
     const { data: reparacion, error } = await supabase
       .from('reparaciones')
       .insert({
         solicitud_id: solicitudId,
-        tecnico_id: tecnicoId,
+        tecnico_id: usuarioId,
         fecha_inicio: new Date().toISOString(),
         estado: 'en_progreso',
       })
@@ -269,13 +267,11 @@ export class TecnicosService {
     if (!solicitud) throw new NotFoundError('Solicitud no encontrada');
     if (solicitud.tecnico_id !== usuarioId) throw new ForbiddenError('Esta solicitud no esta asignada a este tecnico');
 
-    const tecnicoId = await this.getTecnicoIdFromUsuario(usuarioId);
-
     const { data: diagnostico, error } = await supabase
       .from('diagnosticos')
       .insert({
         solicitud_id: solicitudId,
-        tecnico_id: tecnicoId,
+        tecnico_id: usuarioId,
         descripcion: data.descripcion,
         diagnostico: data.diagnostico || null,
         observaciones: data.observaciones || null,
@@ -297,13 +293,11 @@ export class TecnicosService {
     if (!solicitud) throw new NotFoundError('Solicitud no encontrada');
     if (solicitud.tecnico_id !== usuarioId) throw new ForbiddenError('Esta solicitud no esta asignada a este tecnico');
 
-    const tecnicoId = await this.getTecnicoIdFromUsuario(usuarioId);
-
     const { data: reparacion } = await supabase
       .from('reparaciones')
       .select('id, tecnico_id')
       .eq('solicitud_id', solicitudId)
-      .eq('tecnico_id', tecnicoId)
+      .eq('tecnico_id', usuarioId)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -334,13 +328,11 @@ export class TecnicosService {
     if (!solicitud) throw new NotFoundError('Solicitud no encontrada');
     if (solicitud.tecnico_id !== usuarioId) throw new ForbiddenError('Esta solicitud no esta asignada a este tecnico');
 
-    const tecnicoId = await this.getTecnicoIdFromUsuario(usuarioId);
-
     const { data: reparacion } = await supabase
       .from('reparaciones')
       .select('id, tecnico_id, estado')
       .eq('solicitud_id', solicitudId)
-      .eq('tecnico_id', tecnicoId)
+      .eq('tecnico_id', usuarioId)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
