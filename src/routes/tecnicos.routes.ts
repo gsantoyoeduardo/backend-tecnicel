@@ -10,15 +10,7 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get('/', roleMiddleware('administrador'), tecnicosController.listar);
-router.get('/:id', roleMiddleware('administrador'), tecnicosController.obtenerPorId);
-router.post('/', roleMiddleware('administrador'), tecnicosController.crear);
-router.patch('/:id', roleMiddleware('administrador'), tecnicosController.editar);
-router.get('/:id/servicios', roleMiddleware('administrador'), tecnicosController.getServicios);
-router.post('/:id/servicios', roleMiddleware('administrador'), tecnicosController.asignarServicios);
-router.get('/:id/disponibilidad', roleMiddleware('administrador'), tecnicosController.getDisponibilidad);
-router.get('/:id/asignaciones', roleMiddleware('administrador'), tecnicosController.getAsignaciones);
-
+// Rutas estáticas del técnico (deben ir ANTES de las rutas con parámetros)
 router.get('/mis-servicios', roleMiddleware('tecnico'), tecnicosController.misServicios);
 router.get('/mis-ordenes', roleMiddleware('tecnico'), tecnicosController.misOrdenes);
 router.post('/mis-servicios/:solicitudId/iniciar-atencion', roleMiddleware('tecnico'), tecnicosController.iniciarAtencion);
@@ -43,5 +35,15 @@ router.post(
   ),
   tecnicosController.registrarEstadoInicial
 );
+
+// Rutas administrativas con parámetros dinámicos (deben ir DESPUÉS de las rutas estáticas)
+router.get('/', roleMiddleware('administrador'), tecnicosController.listar);
+router.get('/:id', roleMiddleware('administrador'), tecnicosController.obtenerPorId);
+router.post('/', roleMiddleware('administrador'), tecnicosController.crear);
+router.patch('/:id', roleMiddleware('administrador'), tecnicosController.editar);
+router.get('/:id/servicios', roleMiddleware('administrador'), tecnicosController.getServicios);
+router.post('/:id/servicios', roleMiddleware('administrador'), tecnicosController.asignarServicios);
+router.get('/:id/disponibilidad', roleMiddleware('administrador'), tecnicosController.getDisponibilidad);
+router.get('/:id/asignaciones', roleMiddleware('administrador'), tecnicosController.getAsignaciones);
 
 export { router as tecnicosRoutes };
