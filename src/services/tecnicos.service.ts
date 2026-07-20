@@ -272,8 +272,8 @@ export class TecnicosService {
       .insert({
         solicitud_id: solicitudId,
         tecnico_id: usuarioId,
-        descripcion: data.descripcion,
-        diagnostico: data.diagnostico || null,
+        problema_detectado: data.descripcion,
+        solucion_propuesta: data.diagnostico || '',
         observaciones: data.observaciones || null,
       })
       .select()
