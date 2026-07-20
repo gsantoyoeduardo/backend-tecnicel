@@ -18,6 +18,7 @@ router.use(roleMiddleware('administrador'));
 router.get('/', usuariosController.listar);
 router.get('/:id', usuariosController.obtenerPorId);
 router.post('/', validate(crearUsuarioSchema), usuariosController.crear);
+router.post('/sincronizar-tecnicos', usuariosController.sincronizarTecnicos);
 router.patch('/:id', validate(editarUsuarioSchema), usuariosController.editar);
 router.patch('/:id/estado', validate(cambiarEstadoUsuarioSchema), usuariosController.cambiarEstado);
 router.delete('/:id', usuariosController.eliminar);

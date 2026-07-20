@@ -127,6 +127,55 @@ export class UsuariosService {
     return { message: 'Usuario eliminado' };
   }
 
+  async sincronizarTecnicos() {
+    // Obtener el ID del rol "tecnico"
+    const { data: rolTecnico } = await supabase
+      .from('roles')
+      .select('id')
+      .eq('nombre', 'tecnico')
+      .single();
+
+    if (!rolTecnico) throw new AppError('Rol tecnico no encontrado', 500);
+
+    // Obtener todos los usuarios con rol "tecnico"
+    const { data: usuariosTecnicos, error: errorUsuarios } = await supabase
+      .from('usuarios')
+      .select('id')
+      .eq('rol_id', rolTecnico.id);
+
+    if (errorUsuarios) throw new AppError('Error al obtener usuarios tecnicos', 500);
+
+    // Obtener los IDs de usuarios que ya tienen perfil de técnico
+    const { data: perfilesExistentes } = await supabase
+      .from('tecnicos')
+      .select('usuario_id');
+
+    const usuariosConPerfil = new Set(perfilesExistentes?.map(p => p.usuario_id) || []);
+
+    // Crear perfiles para los usuarios que no tienen
+    const usuariosSinPerfil = usuariosTecnicos?.filter(u => !usuariosConPerfil.has(u.id)) || [];
+    
+    let creados = 0;
+    for (const usuario of usuariosSinPerfil) {
+      const { error } = await supabase
+        .from('tecnicos')
+        .insert({
+          usuario_id: usuario.id,
+          especialidad: null,
+          experiencia_anios: 0,
+          estado: 'activo',
+        });
+      
+      if (!error) creados++;
+    }
+
+    return { 
+      total_usuarios_tecnicos: usuariosTecnicos?.length || 0,
+      perfiles_creados: creados,
+      perfiles_ya_existentes: usuariosConPerfil.size
+    };
+  }
+
   private async obtenerNombreRol(rolId: string): Promise<string | null> {
     const { data: rol } = await supabase
       .from('roles')

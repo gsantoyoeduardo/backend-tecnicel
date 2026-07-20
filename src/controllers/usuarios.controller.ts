@@ -102,6 +102,15 @@ export class UsuariosController {
       next(error);
     }
   }
+
+  async sincronizarTecnicos(_req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await usuariosService.sincronizarTecnicos();
+      successResponse(res, data, 'Sincronizacion completada');
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const usuariosController = new UsuariosController();
