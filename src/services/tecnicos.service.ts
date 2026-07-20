@@ -210,13 +210,13 @@ export class TecnicosService {
     if (error) throw new AppError(`Error al iniciar atencion: ${error.message}`, 500);
 
     await supabase.from('solicitudes').update({
-      estado: 'en_progreso',
+      estado: 'iniciada',
       updated_at: new Date().toISOString(),
     }).eq('id', solicitudId);
 
     await supabase.from('solicitudes_tracking').insert({
       solicitud_id: solicitudId,
-      estado: 'en_progreso',
+      estado: 'iniciada',
       comentario: 'Tecnico inicio atencion',
       usuario_id: usuarioId,
     });
@@ -225,6 +225,11 @@ export class TecnicosService {
   }
 
   async cambiarEstado(solicitudId: string, usuarioId: string, estado: string, comentario?: string) {
+    const estadosPermitidos = ['reparando', 'terminada'];
+    if (!estadosPermitidos.includes(estado)) {
+      throw new AppError(`Estado no valido. Solo se permite: ${estadosPermitidos.join(', ')}`, 400);
+    }
+
     const { data: solicitud } = await supabase
       .from('solicitudes')
       .select('id, tecnico_id, estado')
@@ -353,14 +358,14 @@ export class TecnicosService {
     if (error) throw new AppError(`Error al finalizar atencion: ${error.message}`, 500);
 
     await supabase.from('solicitudes').update({
-      estado: 'en_control_calidad',
+      estado: 'terminada',
       updated_at: new Date().toISOString(),
     }).eq('id', solicitudId);
 
     await supabase.from('solicitudes_tracking').insert({
       solicitud_id: solicitudId,
-      estado: 'en_control_calidad',
-      comentario: 'Reparacion finalizada, en espera de control de calidad',
+      estado: 'terminada',
+      comentario: 'Reparacion finalizada',
       usuario_id: usuarioId,
     });
 
